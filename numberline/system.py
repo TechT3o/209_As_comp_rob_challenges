@@ -11,6 +11,7 @@ class NumberlineSystem:
 
         self.time_index = 0
         self.horizon = 0
+        self.gamma = 1
 
         self.applied_force = [-1, 0, 1]
         self.A = 1
@@ -41,5 +42,13 @@ class NumberlineSystem:
         return self.pc * self.v / self.v_max
 
     def value_iteration(self):
-
-
+        # TODO: adjust states and actions, add p function
+        v = [0]
+        i = 0
+        while i != self.horizon:
+            new_v = 0
+            for j in range(len(self.states)):
+                new_v += p(self.states[j], self.actions[j], self.states[j+1]) * (r(self.states[j]) + (self.gamma*v[-1]))
+                v.append(new_v)
+            i += 1
+        return v
