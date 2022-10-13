@@ -2,6 +2,7 @@
 
 import math
 import random as rng
+import itertools
 
 class NumberlineSystem:
 
@@ -19,11 +20,15 @@ class NumberlineSystem:
         self.pc = 1
         self.y_max = 20
         self.v_max = 20
-        self.y_states = range(-self.y_max, self.y_max, 1)
-        self.v_states = range(-self.v_max, self.v_max, 1)
+        self.state_space = [[(y, v) for v in range(-self.v_max, self.v_max + 1)] for y in range(-self.y_max, self.y_max + 1)]
+        self.state_space = list(itertools.chain(*self.state_space)) # flatten list
+
         self.constant_force = int(self.A * math.sin(2 * math.pi * self.y / self.y_max))
 
         self.value = [0]
+
+    def reward(x, u=None):
+        return 1 if x == (0, 0) else 0
 
     def speed_wobble(self):
         p = rng.uniform(0,1)
@@ -35,8 +40,7 @@ class NumberlineSystem:
         if distribution_threshold < p <=1:
             return 0
         else:
-            print("Error")
-
+            raise Exception(f"p value of {p} caused error in speed_wobble()")
 
     def crashing_prob(self):
         return self.pc * self.v / self.v_max
@@ -48,7 +52,11 @@ class NumberlineSystem:
         while i != self.horizon:
             new_v = 0
             for j in range(len(self.states)):
-                new_v += p(self.states[j], self.actions[j], self.states[j+1]) * (r(self.states[j]) + (self.gamma*v[-1]))
+                new_v += p(self.states[j], self.actions[j], self.states[j+1]) * (self.reward(self.states[j]) + (self.gamma*v[-1]))
                 v.append(new_v)
             i += 1
         return v
+
+if __name__ == "__main__":
+    nls = NumberlineSystem()
+    print(nls.states)
