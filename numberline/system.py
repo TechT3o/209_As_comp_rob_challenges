@@ -27,7 +27,7 @@ class NumberlineSystem:
 
         self.value = [0]
 
-    def reward(x, u=None):
+    def reward(sel, x, u=None):
         return 1 if x == (0, 0) else 0
 
     def speed_wobble(self):
@@ -42,8 +42,14 @@ class NumberlineSystem:
         else:
             raise Exception(f"p value of {p} caused error in speed_wobble()")
 
-    def crashing_prob(self):
-        return self.pc * self.v / self.v_max
+    def crashing_prob(self, current_v):
+        return self.pc * current_v / self.v_max
+
+    def noise_prob(self, current_v):
+        return (current_v / self.v_max) * self.pw
+
+    def find_constant_force(self, current_pos):
+        return int(self.A * math.sin(2 * math.pi * current_pos / self.y_max))
 
     def value_iteration(self):
         v = [0 for _ in range(len(self.state_space))]
@@ -73,6 +79,49 @@ class NumberlineSystem:
                 break
 
         return v, pi
+
+    def get_transition_prob(self, input, curr_state, next_state):
+        curr_pos = curr_state[0]
+        curr_vel = curr_state[1]
+        next_vel = next_state[1]
+        curr_constant_force = self.find_constant_force(curr_pos)
+        velocity_difference = next_vel - curr_vel - curr_constant_force
+
+        if input == 0:
+            if velocity_difference == 1:
+                return self.noise_prob(curr_vel)/2 * (1- self.crashing_prob(curr_vel))
+            if velocity_difference == 0:
+                return (1 - self.noise_prob(curr_vel))*(1- self.crashing_prob(curr_vel))
+            if velocity_difference == -1:
+                return self.noise_prob(curr_vel) / 2 * (1 - self.crashing_prob(curr_vel))
+            if velocity_difference == - curr_vel - curr_constant_force:
+                return self.crashing_prob(curr_vel)
+            else:
+                return 0
+
+        if input == 1:
+            if velocity_difference == 2:
+                return self.noise_prob(curr_vel)/2 * (1- self.crashing_prob(curr_vel))
+            if velocity_difference == 1:
+                return (1 - self.noise_prob(curr_vel))*(1- self.crashing_prob(curr_vel))
+            if velocity_difference == 0:
+                return self.noise_prob(curr_vel) / 2 * (1 - self.crashing_prob(curr_vel))
+            if velocity_difference == - curr_vel - curr_constant_force:
+                return self.crashing_prob(curr_vel)
+            else:
+                return 0
+
+        if input == -1:
+            if velocity_difference == 0:
+                return self.noise_prob(curr_vel)/2 * (1- self.crashing_prob(curr_vel))
+            if velocity_difference == -1:
+                return (1- self.noise_prob(curr_vel))*(1- self.crashing_prob(curr_vel))
+            if velocity_difference == -2:
+                return self.noise_prob(curr_vel) / 2 * (1 - self.crashing_prob(curr_vel))
+            if velocity_difference == - curr_vel - curr_constant_force:
+                return self.crashing_prob(curr_vel)
+            else:
+                return 0
 
 if __name__ == "__main__":
     nls = NumberlineSystem()
