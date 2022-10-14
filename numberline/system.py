@@ -46,17 +46,34 @@ class NumberlineSystem:
         return self.pc * self.v / self.v_max
 
     def value_iteration(self):
-        # TODO: adjust states and actions, add p function
-        v = [0]
-        i = 0
-        while i != self.horizon:
-            new_v = 0
-            for j in range(len(self.states)):
-                new_v += p(self.states[j], self.actions[j], self.states[j+1]) * (self.reward(self.states[j]) + (self.gamma*v[-1]))
-                v.append(new_v)
-            i += 1
-        return v
+        v = [0 for _ in range(len(self.state_space))]
+        pi = [None for _ in range(len(self.state_space))]
+        for i in range(self.horizon):
+            max_diff = 0
+            V_new = [0, 0, 0, 0, 0]
+            for state in self.state_space:
+                max_val = 0 # keep track of best value
+                for action in self.applied_force:
+                    val = self.reward(state)
+                    for next_state in self.state_space:
+                        val += self.get_transition_prob(action, state, next_state) * (self.gamma * v[self.state_space.index(next_state)])
+
+                    max_val = max(max_val, val) # update max
+
+                    if V_new[self.state_space.index(state)] < val:
+                        pi[self.state_space.index(state)] = self.applied_force[self.applied_force.index(action)]
+
+                V_new[self.state_space.index(state)] = max_val
+
+                max_diff = max(max_diff, abs(v[self.state_space.index(state)] - V_new[self.state_space.index(state)]))
+            
+            v = V_new
+
+            if max_diff < 1e-400:
+                break
+
+        return v, pi
 
 if __name__ == "__main__":
     nls = NumberlineSystem()
-    print(nls.states)
+    print(nls.value_iteration())
