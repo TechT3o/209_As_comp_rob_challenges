@@ -11,15 +11,15 @@ class NumberlineSystem:
         self.y = 0
 
         self.time_index = 0
-        self.horizon = 0
+        self.horizon = 100
         self.gamma = 1
 
         self.applied_force = [-1, 0, 1]
         self.A = 1
         self.pw = 1
         self.pc = 1
-        self.y_max = 20
-        self.v_max = 20
+        self.y_max = 5
+        self.v_max = 5
         self.state_space = [[(y, v) for v in range(-self.v_max, self.v_max + 1)] for y in range(-self.y_max, self.y_max + 1)]
         self.state_space = list(itertools.chain(*self.state_space)) # flatten list
 
@@ -56,7 +56,7 @@ class NumberlineSystem:
         pi = [None for _ in range(len(self.state_space))]
         for i in range(self.horizon):
             max_diff = 0
-            V_new = [0, 0, 0, 0, 0]
+            V_new = [0 for _ in range(len(self.state_space))]
             for state in self.state_space:
                 max_val = 0 # keep track of best value
                 for action in self.applied_force:
@@ -74,9 +74,6 @@ class NumberlineSystem:
                 max_diff = max(max_diff, abs(v[self.state_space.index(state)] - V_new[self.state_space.index(state)]))
             
             v = V_new
-
-            if max_diff < 1e-400:
-                break
 
         return v, pi
 
