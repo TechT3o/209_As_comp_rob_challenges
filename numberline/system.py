@@ -12,7 +12,7 @@ class NumberlineSystem:
 
         self.time_index = 0
         self.horizon = 100
-        self.gamma = 1
+        self.gamma = 0.5
 
         self.applied_force = [-1, 0, 1]
         self.A = 1
@@ -67,7 +67,7 @@ class NumberlineSystem:
                 for action in self.applied_force:
                     val = self.reward(state)
                     for next_state in self.state_space:
-                        print(state, next_state, self.get_transition_prob(action, state, next_state))
+                        #print(state, next_state, self.get_transition_prob(action, state, next_state))
                         val += self.get_transition_prob(action, state, next_state) * (self.gamma * v[self.state_space.index(next_state)])
 
                     max_val = max(max_val, val) # update max
@@ -132,4 +132,6 @@ class NumberlineSystem:
 
 if __name__ == "__main__":
     nls = NumberlineSystem()
-    print(nls.value_iteration())
+    v, pi = nls.value_iteration()
+    for i in range(len(v)):
+        print(f"State: {nls.state_space[i]} Value: {v[i]} Policy: {pi[i]}")
