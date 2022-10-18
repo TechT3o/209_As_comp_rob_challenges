@@ -11,8 +11,8 @@ class NumberlineSystem:
         self.y = 0
 
         self.time_index = 0
-        self.horizon = 100
-        self.gamma = 1
+        self.horizon = 1000
+        self.gamma = 0.9
 
         self.applied_force = [-1, 0, 1]
         self.A = 1
@@ -31,7 +31,7 @@ class NumberlineSystem:
         return 1 if x == (0, 0) else 0
 
     def speed_wobble(self):
-        p = rng.uniform(0,1)
+        p = rng.uniform(0, 1)
         distribution_threshold = (self.v / self.v_max) * self.pw
         if 0 < p <= distribution_threshold/2:
             return 1
@@ -43,10 +43,10 @@ class NumberlineSystem:
             raise Exception(f"p value of {p} caused error in speed_wobble()")
 
     def crashing_prob(self, current_v):
-        return self.pc * current_v / self.v_max
+        return self.pc * abs(current_v) / self.v_max
 
     def noise_prob(self, current_v):
-        return (current_v / self.v_max) * self.pw
+        return (abs(current_v) / self.v_max) * self.pw
 
     def find_constant_force(self, current_pos):
         return int(self.A * math.sin(2 * math.pi * current_pos / self.y_max))
@@ -58,22 +58,29 @@ class NumberlineSystem:
             max_diff = 0
             V_new = [0 for _ in range(len(self.state_space))]
             for state in self.state_space:
-                max_val = 0 # keep track of best value
+                max_val = [] # keep track of best value
                 for action in self.applied_force:
                     val = self.reward(state)
+                    #print(f'init value for state {state}, action { action} is {val}')
                     for next_state in self.state_space:
-                        print(state, next_state, self.get_transition_prob(action, state, next_state))
-                        val += self.get_transition_prob(action, state, next_state) * (self.gamma * v[self.state_space.index(next_state)])
+                        trans_prob = self.get_transition_prob(action, state, next_state)
+                        increment =  trans_prob * (self.gamma * v[self.state_space.index(next_state)])
+                        # if increment > 0:
+                        #     print(increment)
+                        #     print(state, next_state, trans_prob)
+                        val += increment
+                        #print(f'next value for state {state}, next state {next_state}, action {action} is {val}')
 
-                    max_val = max(max_val, val) # update max
+                    max_val.append(val) # update max
 
-                    if V_new[self.state_space.index(state)] < val:
-                        pi[self.state_space.index(state)] = self.applied_force[self.applied_force.index(action)]
-
-                V_new[self.state_space.index(state)] = max_val
+                    # if V_new[self.state_space.index(state)] < val:
+                    #     pi[self.state_space.index(state)] = self.applied_force[self.applied_force.index(action)]
+                if max(max_val) != 0:
+                    pi[self.state_space.index(state)] = self.applied_force[max_val.index(max(max_val))]
+                V_new[self.state_space.index(state)] = max(max_val)
 
                 max_diff = max(max_diff, abs(v[self.state_space.index(state)] - V_new[self.state_space.index(state)]))
-            
+            #print(v)
             v = V_new
 
         return v, pi
@@ -88,6 +95,8 @@ class NumberlineSystem:
 
         if next_pos-curr_pos != curr_vel:
             return 0
+        # else:
+        #     print(f' input is {input} and vd is {velocity_difference}')
 
         if input == 0:
             if velocity_difference == 1:
@@ -127,4 +136,7 @@ class NumberlineSystem:
 
 if __name__ == "__main__":
     nls = NumberlineSystem()
-    print(nls.value_iteration())
+    v,pi = nls.value_iteration()
+    for i in range(len(nls.state_space)):
+        print(f' p value is {pi[i]} for state {nls.state_space[i]}')
+    print([i for i in pi if pi[i] != None] )
