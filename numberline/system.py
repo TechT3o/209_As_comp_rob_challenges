@@ -27,7 +27,7 @@ class NumberlineSystem:
 
         self.value = [0]
 
-    def reward(sel, x, u=None):
+    def reward(self, x, u=None):
         return 1 if x == (0, 0) else 0
 
     def speed_wobble(self):
@@ -79,11 +79,13 @@ class NumberlineSystem:
 
     def get_transition_prob(self, input, curr_state, next_state):
         curr_pos = curr_state[0]
+        next_pos = next_state[0]
         curr_vel = curr_state[1]
         next_vel = next_state[1]
         curr_constant_force = self.find_constant_force(curr_pos)
         velocity_difference = next_vel - curr_vel - curr_constant_force
-
+        if abs(next_pos) > self.y_max:
+            return 0
         if input == 0:
             if velocity_difference == 1:
                 return self.noise_prob(curr_vel)/2 * (1- self.crashing_prob(curr_vel))
