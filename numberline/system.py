@@ -11,7 +11,7 @@ class NumberlineSystem:
         self.y = 0
 
         self.time_index = 0
-        self.horizon = 1000
+        self.horizon = 500
         self.gamma = 0.9
 
         self.applied_force = [-1, 0, 1]
@@ -28,7 +28,12 @@ class NumberlineSystem:
         self.value = [0]
 
     def reward(self, x, u=None):
-        return 1 if x == (0, 0) else 0
+        if x == (0, 0): # at rest at origin
+            return 10
+        elif x[1] != 0: # fuel cost
+            return -1
+        else:
+            return 0
 
     def speed_wobble(self):
         p = rng.uniform(0, 1)
@@ -61,7 +66,6 @@ class NumberlineSystem:
                 max_val = [] # keep track of best value
                 for action in self.applied_force:
                     val = self.reward(state)
-                    #print(f'init value for state {state}, action { action} is {val}')
                     for next_state in self.state_space:
                         trans_prob = self.get_transition_prob(action, state, next_state)
                         increment =  trans_prob * (self.gamma * v[self.state_space.index(next_state)])
@@ -95,8 +99,6 @@ class NumberlineSystem:
 
         if next_pos-curr_pos != curr_vel:
             return 0
-        # else:
-        #     print(f' input is {input} and vd is {velocity_difference}')
 
         if input == 0:
             if velocity_difference == 1:
