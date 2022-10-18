@@ -28,7 +28,12 @@ class NumberlineSystem:
         self.value = [0]
 
     def reward(self, x, u=None):
-        return 1 if x == (0, 0) else 0
+        if x == (0, 0): # at rest at origin
+            return 10
+        elif x[1] != 0: # fuel cost
+            return -1
+        else:
+            return 0
 
     def speed_wobble(self):
         p = rng.uniform(0,1)
@@ -72,7 +77,7 @@ class NumberlineSystem:
                 V_new[self.state_space.index(state)] = max_val
 
                 max_diff = max(max_diff, abs(v[self.state_space.index(state)] - V_new[self.state_space.index(state)]))
-            
+
             v = V_new
 
         return v, pi
