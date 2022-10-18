@@ -62,6 +62,7 @@ class NumberlineSystem:
                 for action in self.applied_force:
                     val = self.reward(state)
                     for next_state in self.state_space:
+                        print(state, next_state, self.get_transition_prob(action, state, next_state))
                         val += self.get_transition_prob(action, state, next_state) * (self.gamma * v[self.state_space.index(next_state)])
 
                     max_val = max(max_val, val) # update max
@@ -84,8 +85,10 @@ class NumberlineSystem:
         next_vel = next_state[1]
         curr_constant_force = self.find_constant_force(curr_pos)
         velocity_difference = next_vel - curr_vel - curr_constant_force
-        if abs(next_pos) > self.y_max:
+
+        if next_pos-curr_pos != curr_vel:
             return 0
+
         if input == 0:
             if velocity_difference == 1:
                 return self.noise_prob(curr_vel)/2 * (1- self.crashing_prob(curr_vel))
